@@ -97,6 +97,49 @@ void infixToPostfix(const char* infix, char* postfix)
     postfix[k] = '\0'; // 避免印出亂碼
 }
 
+void evaluatePostfix(char* postfix)
+{
+    Stack evaluation;
+
+    for (int i = 0; i < strlen(postfix); i++)
+    {
+        if (isalnum(postfix[i]))
+        {
+            evaluation.push(postfix[i]);
+            // postfix: 12+3+ -> evaluation: 1 and 2 -> 
+        }
+        else if (not isalnum(postfix[i]))
+        {   
+            char a = evaluation.pop();
+            char b = evaluation.pop();
+                
+            int intA = a - '0';
+            int intB = b - '0';
+            
+            if (postfix[i] == '+')
+            {
+                evaluation.push(intA + intB + '0');
+            }
+            else if (postfix[i] == '-')
+            {
+                evaluation.push(intB - intA + '0');
+            }
+            else if (postfix[i] == '*')
+            {
+                evaluation.push(intA * intB + '0');
+            }
+            else if (postfix[i] == '/')
+            {
+                evaluation.push(intB / intA + '0');
+            }
+            
+        }
+        
+    }
+    // cout << "evaluation";
+    cout << evaluation.peek() << endl;
+}
+
 int main()
 {
     char infix[100], postfix[100];
@@ -105,6 +148,8 @@ int main()
 
     infixToPostfix(infix, postfix); // 轉換為後序表達式
     cout << "Postfix expression: " << postfix << endl; // 輸出後序表達式
+
+    evaluatePostfix(postfix);
 
     return 0;
 

@@ -1,42 +1,43 @@
 #include <iostream>
 #include <cctype>
 #include <cstring>
+#include <typeinfo>
 using namespace std;
 
-
+template <typename T>
 struct Node
 {
-    char data ;
-    Node* next;
+    T data ;
+    Node<T>* next;
 };
 
-
+template <typename T>
 class Stack
 {
 private:
-    Node* top;
+    Node<T>* top;
 public:
     Stack() { top = nullptr; }
 
-    void push (char ch)
+    void push (T ch)
     {
-        Node* newNode = new Node;
+        Node<T>* newNode = new Node<T>;
         newNode->data = ch;
         newNode->next = top;
         top = newNode;
     }
 
-    char pop()
+    T pop()
     {
         if (isEmpty()) return '\0';
-        char ch = top->data;
-        Node* temp = top;
+        T ch = top->data;
+        Node<T>* temp = top;
         top = top->next;
         delete temp;
         return ch;
     }
 
-    char peek()
+    T peek()
     {
         return (top ? top->data : '\0');
     }
@@ -65,7 +66,7 @@ int precedence(char op)
 
 void infixToPostfix(const char* infix, char* postfix)
 {
-    Stack s;
+    Stack<char> s;
     int k = 0;
 
     for (int i = 0; i < strlen(infix); i ++) { // 遍歷每個infix 元素
@@ -99,44 +100,39 @@ void infixToPostfix(const char* infix, char* postfix)
 
 void evaluatePostfix(char* postfix)
 {
-    Stack evaluation;
+    Stack<int> evaluation;
 
     for (int i = 0; i < strlen(postfix); i++)
     {
         if (isalnum(postfix[i]))
         {
-            evaluation.push(postfix[i]);
-            // postfix: 12+3+ -> evaluation: 1 and 2 -> 
+            evaluation.push(postfix[i] - '0'); // 把postfix[i] 以int 存入stack 
         }
         else if (not isalnum(postfix[i]))
         {   
-            char a = evaluation.pop();
-            char b = evaluation.pop();
-                
-            int intA = a - '0';
-            int intB = b - '0';
+            int a = evaluation.pop(); // 提取頂層元素
+            int b = evaluation.pop(); // 提取第二層元素
+            
             
             if (postfix[i] == '+')
             {
-                evaluation.push(intA + intB + '0');
+                evaluation.push(a + b);
             }
             else if (postfix[i] == '-')
             {
-                evaluation.push(intB - intA + '0');
+                evaluation.push(b - a);
             }
             else if (postfix[i] == '*')
             {
-                evaluation.push(intA * intB + '0');
+                evaluation.push(a * b);
             }
             else if (postfix[i] == '/')
             {
-                evaluation.push(intB / intA + '0');
+                evaluation.push(b / a);
             }
             
         }
-        
     }
-    // cout << "evaluation";
     cout << evaluation.peek() << endl;
 }
 
@@ -152,6 +148,4 @@ int main()
     evaluatePostfix(postfix);
 
     return 0;
-
-    
 }

@@ -161,7 +161,7 @@ bool infixToPostfix(string infix, string postfix[], int& postfixcount)
         // 如果是operator
         else if (isOperator(infix[i])) {
 
-            // 錯誤處理: 結尾是operator
+            // 錯誤處理: infix結尾是operator
             if (i == infix.length() - 1) {
                 cout << "Error: Expression ends with operator" << endl;
                 return false;

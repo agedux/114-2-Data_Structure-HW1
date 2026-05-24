@@ -2,6 +2,9 @@
 #include <cctype>
 #include <cstring>
 #include <typeinfo>
+#include <string>
+#include <cmath>
+#include <iomanip>
 using namespace std;
 
 template <typename T>
@@ -50,7 +53,11 @@ public:
 
 int precedence(char op) 
 {
-    if (op == '*' or op == '/')
+    if (op == '^')
+    {
+        return 3;
+    }
+    else if (op == '*' or op == '/' or op == '%')
     {
         return 2;
     }
@@ -64,88 +71,127 @@ int precedence(char op)
     }
 }
 
-void infixToPostfix(const char* infix, char* postfix)
+void infixToPostfix(string infix, string postfix[], int& postfixcount)
 {
     Stack<char> s;
-    int k = 0;
+    postfixcount = 0;
 
-    for (int i = 0; i < strlen(infix); i ++) { // 遍歷每個infix 元素
+    for (int i = 0; i < infix.length(); i ++) { // 遍歷每個infix 元素
         
-        if (isalnum(infix[i])) {
-            postfix[k++] = infix[i]; //如果是字母或數字就放到postfix 裡，然後K 往後一格
+        if (isdigit(infix[i]) or infix[i] == '.') {
+            string number = "";
+
+            while (i<infix.length() and (isdigit(infix[i]) or infix[i] == '.'))
+            {
+                number += infix[i]; //如果是字母或數字就放到postfix 裡，然後K 往後一格
+                i++;
+            }
+            i--;
+            postfix[postfixcount++] = number;
         }
         else if (infix[i] == '(') {
             s.push(infix[i]); // 把左括號放入stack 裡
         }
         else if (infix[i] == ')') {
             while (s.peek() != '(' && not s.isEmpty()) {
-                postfix[k++] = s.pop(); // 如果是右括號，開始pop stack 裡的元素並放入postfix 裡，直到左括號為止
+                postfix[postfixcount++] = s.pop(); // 如果是右括號，開始pop stack 裡的元素並放入postfix 裡，直到左括號為止
             }
             if (s.peek() == '(') s.pop(); // 把左括號pop 掉
+        }
+        else if (i == 0 or not isdigit(infix[i-1])) {
+            string number = "";
+            while (i<infix.length() and (isdigit(infix[i]) or infix[i] == '.'))
+            {
+                number += infix[i]; //如果是字母或數字就放到postfix 裡，然後K 往後一格
+                i++;
+            }
+            i--;
+            postfix[postfixcount++] = number;
         }
         else {
             // 處理operators
             // 如果stack 裡operator 的precedence 比infix 的operator 還要大，就放到postfix 裡
             while (not s.isEmpty() && precedence(s.peek()) >= precedence(infix[i])) {
-                postfix[k++] = s.pop();
+                postfix[postfixcount++] = s.pop();
             }
             s.push(infix[i]); // 把目前的operator 放入stack
         }
     }
     while (not s.isEmpty()) {
-        postfix[k++] = s.pop(); // 確保沒有任何operators 殘留在stack
+        postfix[postfixcount++] = s.pop(); // 確保沒有任何operators 殘留在stack
     }
-    postfix[k] = '\0'; // 避免印出亂碼
 }
 
-void evaluatePostfix(char* postfix)
+void printPostfix (string postfix[], int postfixcount)
 {
-    Stack<int> evaluation;
-
-    for (int i = 0; i < strlen(postfix); i++)
+    cout << "Postfix expression: ";
+    for (int i = 0; i < postfixcount; i++)
     {
-        if (isalnum(postfix[i]))
-        {
-            evaluation.push(postfix[i] - '0'); // 把postfix[i] 以int 存入stack 
-        }
-        else if (not isalnum(postfix[i]))
-        {   
-            int a = evaluation.pop(); // 提取頂層元素
-            int b = evaluation.pop(); // 提取第二層元素
+        cout << postfix[i];
+    }
+    cout << endl;
+}
+
+void evaluatePostfix(string postfix[], int postfixcount)
+{
+    Stack<double> evaluation;
+
+    for (int i = 0; i < postfixcount; i++)
+    {
+        string token = postfix[i];
+
+        if (token.length() == 1 and not isdigit(token[0]) and token[0] != '.')
+        {  
+            double a = evaluation.pop(); // 提取頂層元素
+            double b = evaluation.pop(); // 提取第二層元素
             
             
-            if (postfix[i] == '+')
+            if (token[0] == '+')
             {
                 evaluation.push(a + b);
             }
-            else if (postfix[i] == '-')
+            else if (token[0] == '-')
             {
                 evaluation.push(b - a);
             }
-            else if (postfix[i] == '*')
+            else if (token[0] == '*')
             {
                 evaluation.push(a * b);
             }
-            else if (postfix[i] == '/')
+            else if (token[0] == '/')
             {
                 evaluation.push(b / a);
             }
-            
+            else if (token[0] == '^')
+            {
+                evaluation.push(pow(b, a));
+            }
+            else if (token[0] == '%')
+            {
+                evaluation.push(fmod(b, a));
+            }
+        }
+        else {
+            evaluation.push(stod(token)); // 把postfix[i] 以int 存入stack
         }
     }
+    cout << fixed << setprecision(1);
+    cout<<"Result: ";
     cout << evaluation.peek() << endl;
 }
 
 int main()
 {
-    char infix[100], postfix[100];
+    string infix, postfix[100];
+    int postfixcount = 0;
+
     cout << "Enter an Infix expression: ";
-    cin >> infix; // 輸入中序表達式
+    getline(cin,infix); // 輸入中序表達式
 
-    infixToPostfix(infix, postfix); // 轉換為後序表達式
-    cout << "Postfix expression: " << postfix << endl; // 輸出後序表達式
+    infixToPostfix(infix, postfix, postfixcount); // 轉換為後序表達式
+    printPostfix(postfix, postfixcount); // 輸出後序表達式
 
-    evaluatePostfix(postfix);
+    evaluatePostfix(postfix, postfixcount);
 
     return 0;
 }
